@@ -3,12 +3,18 @@ using CuteCalculator.ViewModels;
 
 namespace CuteCalculator.Views
 {
-    public partial class MainWindow : Window
-    {
-        public MainWindow()
+    public partial class MainWindow : Window {
+    public MainWindow()
         {
-            InitializeComponent();
-            DataContext = new CalculatorViewModel();
+            try
+            {
+                InitializeComponent();
+                DataContext = new CalculatorViewModel();
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error initializing window");
+            }
         }
     }
 }

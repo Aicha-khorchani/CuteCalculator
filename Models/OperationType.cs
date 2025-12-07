@@ -6,6 +6,7 @@ namespace CuteCalculator.Models
         Add,
         Subtract,
         Multiply,
-        Divide
+        Divide,
+        percentage
     }
 }

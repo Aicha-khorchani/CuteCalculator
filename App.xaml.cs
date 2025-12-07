@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace cutecalculator;
+namespace CuteCalculator;
 
 /// <summary>
 /// Interaction logic for App.xaml

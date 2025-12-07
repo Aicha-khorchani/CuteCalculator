@@ -1,1 +1,26 @@
 MVVM C#.net cute calculator using wpf 
+================================================================
+clone using :
+git clone https://github.com/Aicha-khorchani/CuteCalculator.git
+cd CuteCalculator
+dotnet run
+===============================================================
+System / Software Requirements:
+
+Operating System: Windows 10 or later
+
+.NET SDK: .NET 10 SDK (download here
+
+)
+
+Includes Microsoft.NETCore.App, Microsoft.WindowsDesktop.App, and Microsoft.AspNetCore.App runtimes
+
+IDE / Editor:
+
+Visual Studio 2022/2026 (any edition with .NET desktop development workload), or
+
+Visual Studio Code with C# extension (OmniSharp)
+
+NuGet: Installed with the SDK (for restoring packages if you use any)
+
+Optional: Git for version control
