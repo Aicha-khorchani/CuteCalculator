@@ -1,6 +1,7 @@
 <Window x:Class="CuteCalculator.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:CuteCalculator.Converters"
         Title="Cute Calculator"
         Width="360"
         Height="460"
@@ -9,38 +10,65 @@
         ResizeMode="NoResize"
         Icon="pack://application:,,,/Assets/cat.ico">
 
-    <Window.Resources>
-        <Color x:Key="PinkMain">#FFF5C8E8</Color>
-        <Color x:Key="ShadowColor">#33000000</Color>
 
-        <SolidColorBrush x:Key="ButtonBrush" Color="{StaticResource PinkMain}" />
+<Window.Resources>
+    <Color x:Key="PinkMain">#FFF5C8E8</Color>
+    <Color x:Key="ShadowColor">#33000000</Color>
 
-        <Style x:Key="CalcButton" TargetType="Button">
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Height" Value="55"/>
-            <Setter Property="Margin" Value="1"/> 
-            <Setter Property="Padding" Value="2"/>
-            <Setter Property="Background" Value="{StaticResource ButtonBrush}"/>
-            <Setter Property="Foreground" Value="#7A306C"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="{StaticResource ShadowColor}" BlurRadius="4" ShadowDepth="1"/>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border CornerRadius="20" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
+    <SolidColorBrush x:Key="ButtonBrush" Color="{StaticResource PinkMain}" />
+
+    <!-- Shared style resources -->
+    <Style x:Key="CalcButtonBase">
+        <Setter Property="Control.FontSize" Value="20"/>
+        <Setter Property="Control.FontWeight" Value="SemiBold"/>
+        <Setter Property="Control.Height" Value="55"/>
+        <Setter Property="Control.Margin" Value="1"/> 
+        <Setter Property="Control.Padding" Value="2"/>
+        <Setter Property="Control.Background" Value="{StaticResource ButtonBrush}"/>
+        <Setter Property="Control.Foreground" Value="#7A306C"/>
+        <Setter Property="Control.BorderThickness" Value="0"/>
+        <Setter Property="Control.Cursor" Value="Hand"/>
+        <Setter Property="Control.Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="{StaticResource ShadowColor}" BlurRadius="4" ShadowDepth="1"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- CalcButton -->
+    <Style x:Key="CalcButton" TargetType="Button" BasedOn="{StaticResource CalcButtonBase}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border CornerRadius="20" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- CalcToggleButton -->
+    <Style x:Key="CalcToggleButton" TargetType="ToggleButton" BasedOn="{StaticResource CalcButtonBase}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border CornerRadius="20" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Opacity" Value="0.8"/>
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Background" Value="#FFDBA3CE"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+</Window.Resources>
 
    <Grid Margin="10">
     <Grid.RowDefinitions>
@@ -57,13 +85,52 @@
     <Border.Effect>
         <DropShadowEffect Color="#33000000" BlurRadius="8" ShadowDepth="2"/>
     </Border.Effect>
-    <StackPanel>
-<StackPanel>
-    <TextBlock Text="{Binding FormulaText}" FontSize="16" HorizontalAlignment="Right" Foreground="#7A306C"/>
-    <TextBlock Text="{Binding DisplayText}" FontSize="32" FontWeight="Bold" HorizontalAlignment="Right" Foreground="#7A306C"/>
-</StackPanel>
-    </StackPanel>
+
+    <Grid>
+
+        <!-- Normal calculator display -->
+        <StackPanel Visibility="{Binding IsHistoryVisible,
+                                  Converter={StaticResource BoolInverseToVisibilityConverter}}">
+            <TextBlock Text="{Binding FormulaText}"
+                       FontSize="16"
+                       HorizontalAlignment="Right"
+                       Foreground="#7A306C"/>
+
+            <TextBlock Text="{Binding DisplayText}"
+                       FontSize="32"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Right"
+                       Foreground="#7A306C"/>
+        </StackPanel>
+
+        <!-- History preview -->
+        <ListBox ItemsSource="{Binding History}"
+                 Visibility="{Binding IsHistoryVisible,
+                                      Converter={StaticResource BoolToVisibilityConverter}}"
+                 BorderThickness="0"
+                 HorizontalContentAlignment="Right"
+                 Background="Transparent">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="{Binding Formula}"
+                                   FontSize="14"
+                                   Foreground="#7A306C"
+                                   HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding Result}"
+                                   FontSize="22"
+                                   FontWeight="Bold"
+                                   Foreground="#7A306C"
+                                   HorizontalAlignment="Right"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+    </Grid>
 </Border>
+
+
 
     <!-- Buttons -->
     <Grid Grid.Row="1">
@@ -110,8 +177,9 @@
         <Button Grid.Row="4" Grid.Column="0" Content="0" Command="{Binding DigitCommand}" CommandParameter="0" Style="{StaticResource CalcButton}"/>
         <Button Grid.Row="4" Grid.Column="1" Content="." Command="{Binding DecimalCommand}" Style="{StaticResource CalcButton}"/>
         <Button Grid.Row="4" Grid.Column="2" Content="=" Command="{Binding EqualsCommand}" Style="{StaticResource CalcButton}"/>
-        <Button Grid.Row="4" Grid.Column="3" Content="🕒" Command="{Binding ToggleHistoryCommand}" Style="{StaticResource CalcButton}"/>
+        <ToggleButton  Grid.Row="4" Grid.Column="3" Content="🕒" IsChecked="{Binding IsHistoryVisible}" Style="{StaticResource CalcToggleButton}"/>
+
     </Grid>
-        </Grid>
+</Grid>
 
 </Window>

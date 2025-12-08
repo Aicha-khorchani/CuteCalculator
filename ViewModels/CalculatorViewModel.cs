@@ -23,40 +23,45 @@ namespace CuteCalculator.ViewModels
         public ObservableCollection<OperationResult> History { get; } = new();
         private string _formulaText = "";
         // History toggle
-private bool _isHistoryVisible = false;
-public bool IsHistoryVisible
-{
-    get => _isHistoryVisible;
-    set
-    {
-        _isHistoryVisible = value;
-        OnPropertyChanged();
-        OnPropertyChanged(nameof(DisplayContent)); // Update display binding
-    }
-}
+        private bool _isHistoryVisible = false;
+        public bool IsHistoryVisible
+        {
+            get => _isHistoryVisible;
+            set
+            {
+                _isHistoryVisible = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CurrentDisplay));
+            }
+        }
 
-// History preview (last 1–2 operations)
-public ObservableCollection<OperationResult> HistoryPreview
-{
-    get
-    {
-        var preview = new ObservableCollection<OperationResult>();
-        for (int i = 0; i < Math.Min(2, History.Count); i++)
-            preview.Add(History[History.Count - 1 - i]); // newest first
-        return preview;
-    }
-}
 
-// Display content: switches between formula/input and history preview
-public object DisplayContent => IsHistoryVisible ? (object)HistoryPreview : new { Formula = FormulaText, Result = DisplayText };
+        // History preview (last 1–2 operations)
+        public ObservableCollection<OperationResult> HistoryPreview
+        {
+            get
+            {
+                var preview = new ObservableCollection<OperationResult>();
+                for (int i = 0; i < Math.Min(2, History.Count); i++)
+                    preview.Add(History[History.Count - 1 - i]); // newest first
+                return preview;
+            }
+        }
 
-    public string FormulaText{
-    get => _formulaText;
-    set{
-        _formulaText = value;
-        OnPropertyChanged();
-      }
-    }
+        // Display content: switches between formula/input and history preview
+        public DisplayState CurrentDisplay => IsHistoryVisible
+                ? null
+                : new DisplayState { Formula = FormulaText, Result = DisplayText };
+
+        public string FormulaText
+        {
+            get => _formulaText;
+            set
+            {
+                _formulaText = value;
+                OnPropertyChanged();
+            }
+        }
         private double? _firstOperand = null;
         private OperationType _currentOperation = OperationType.None;
         private bool _isNewInput = true; // overwrite vs append
@@ -90,76 +95,78 @@ public object DisplayContent => IsHistoryVisible ? (object)HistoryPreview : new 
             BackspaceCommand = new RelayCommand(_ => Backspace());
             DecimalCommand = new RelayCommand(_ => AppendDecimal());
             ToggleSignCommand = new RelayCommand(_ => ToggleSign());
-            ToggleHistoryCommand = new RelayCommand(_ =>{ IsHistoryVisible = !IsHistoryVisible;});
+            ToggleHistoryCommand = new RelayCommand(_ => { IsHistoryVisible = !IsHistoryVisible; });
 
         }
 
         #region Core Methods
 
-private void ApplyPercentage()
-{
-    try
-    {
-        double currentValue = ParseDisplayText();
-
-        if (_firstOperand.HasValue && _currentOperation != OperationType.None)
+        private void ApplyPercentage()
         {
-            // Treat as percentage of the first operand
-            var percentageService = new Percentage();
-            double percentValue = percentageService.Compute(_firstOperand.Value, currentValue);
-            DisplayText = percentValue.ToString(CultureInfo.InvariantCulture);
+            try
+            {
+                double currentValue = ParseDisplayText();
+
+                if (_firstOperand.HasValue && _currentOperation != OperationType.None)
+                {
+                    // Treat as percentage of the first operand
+                    var percentageService = new Percentage();
+                    double percentValue = percentageService.Compute(_firstOperand.Value, currentValue);
+                    DisplayText = percentValue.ToString(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    // If no operator, just divide by 100
+                    DisplayText = (currentValue / 100.0).ToString(CultureInfo.InvariantCulture);
+                }
+
+                _isNewInput = true; // Next digit overwrites display
+            }
+            catch
+            {
+                DisplayText = "Error";
+                _firstOperand = null;
+                _currentOperation = OperationType.None;
+                _isNewInput = true;
+            }
         }
-        else
+
+        public void AppendDigit(string digit)
         {
-            // If no operator, just divide by 100
-            DisplayText = (currentValue / 100.0).ToString(CultureInfo.InvariantCulture);
+            if (_isNewInput)
+            {
+                DisplayText = digit == "0" ? "0" : digit;
+                _isNewInput = digit == "0";
+            }
+            else
+            {
+                if (DisplayText == "0")
+                    DisplayText = digit;
+                else
+                    DisplayText += digit;
+            }
+
+            // Update formula
+            FormulaText += digit;
+            OnPropertyChanged(nameof(CurrentDisplay));
         }
 
-        _isNewInput = true; // Next digit overwrites display
-    }
-    catch
-    {
-        DisplayText = "Error";
-        _firstOperand = null;
-        _currentOperation = OperationType.None;
-        _isNewInput = true;
-    }
-}
 
-public void AppendDigit(string digit)
-{
-    if (_isNewInput)
-    {
-        DisplayText = digit == "0" ? "0" : digit;
-        _isNewInput = digit == "0";
-    }
-    else
-    {
-        if (DisplayText == "0")
-            DisplayText = digit;
-        else
-            DisplayText += digit;
-    }
-
-    // Update formula
-    FormulaText += digit;
-}
-
-
-public void AppendDecimal()
-{
-    if (_isNewInput)
-    {
-        DisplayText = "0.";
-        _isNewInput = false;
-        FormulaText += "0.";
-    }
-    else if (!DisplayText.Contains("."))
-    {
-        DisplayText += ".";
-        FormulaText += ".";
-    }
-}
+        public void AppendDecimal()
+        {
+            if (_isNewInput)
+            {
+                DisplayText = "0.";
+                _isNewInput = false;
+                FormulaText += "0.";
+            }
+            else if (!DisplayText.Contains("."))
+            {
+                DisplayText += ".";
+                FormulaText += ".";
+            }
+            OnPropertyChanged(nameof(CurrentDisplay));
+        }
 
 
         public void ToggleSign()
@@ -171,13 +178,13 @@ public void AppendDecimal()
             else
                 DisplayText = "-" + DisplayText;
         }
-private double ParseDisplayText()
-{
-    if (double.TryParse(DisplayText, NumberStyles.Float, CultureInfo.InvariantCulture, out var val))
-        return val;
-    return 0;
-}
-public void SetOperation(OperationType op)
+        private double ParseDisplayText()
+        {
+            if (double.TryParse(DisplayText, NumberStyles.Float, CultureInfo.InvariantCulture, out var val))
+                return val;
+            return 0;
+        }
+  public void SetOperation(OperationType op)
 {
     if (_firstOperand.HasValue && !_isNewInput && _currentOperation != OperationType.None)
     {
@@ -188,7 +195,7 @@ public void SetOperation(OperationType op)
     _currentOperation = op;
     _isNewInput = true;
 
-    // Show operator in formula using public property
+    // Update formula display
     FormulaText += op switch
     {
         OperationType.Add => " + ",
@@ -197,6 +204,8 @@ public void SetOperation(OperationType op)
         OperationType.Divide => " ÷ ",
         _ => ""
     };
+
+    OnPropertyChanged(nameof(CurrentDisplay));
 }
         public void ExecuteOperation()
         {
@@ -207,18 +216,22 @@ public void SetOperation(OperationType op)
                 double secondOperand = ParseDisplayText();
                 var opHandler = _operations[_currentOperation];
                 double result = opHandler.Compute(_firstOperand.Value, secondOperand);
+
                 // Save history
                 History.Add(new OperationResult
                 {
-                 Formula = FormulaText + secondOperand,
-                 Result = result.ToString(CultureInfo.InvariantCulture)
+                    Formula = FormulaText + secondOperand,
+                    Result = result.ToString(CultureInfo.InvariantCulture)
                 });
-
+                // Limit to 2 operations only no need to take the whole history 
+                while (History.Count > 2)
+                History.RemoveAt(0);
                 DisplayText = result.ToString(CultureInfo.InvariantCulture);
                 _firstOperand = result;
                 _currentOperation = OperationType.None;
                 _isNewInput = true;
-                
+
+                OnPropertyChanged(nameof(CurrentDisplay));
             }
             catch (DivideByZeroException)
             {
@@ -226,6 +239,8 @@ public void SetOperation(OperationType op)
                 _firstOperand = null;
                 _currentOperation = OperationType.None;
                 _isNewInput = true;
+
+                OnPropertyChanged(nameof(CurrentDisplay));
             }
             catch (Exception)
             {
@@ -233,16 +248,19 @@ public void SetOperation(OperationType op)
                 _firstOperand = null;
                 _currentOperation = OperationType.None;
                 _isNewInput = true;
+
+                OnPropertyChanged(nameof(CurrentDisplay));
             }
         }
 
         public void Clear()
         {
             DisplayText = "0";
-                FormulaText = "";       
+            FormulaText = "";
             _firstOperand = null;
             _currentOperation = OperationType.None;
             _isNewInput = true;
+            OnPropertyChanged(nameof(CurrentDisplay));
         }
 
         public void Backspace()
@@ -282,5 +300,5 @@ public void SetOperation(OperationType op)
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         #endregion
     }
-    
+
 }
