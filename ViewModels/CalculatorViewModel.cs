@@ -76,7 +76,17 @@ namespace CuteCalculator.ViewModels
         public ICommand ToggleSignCommand { get; }
         public ICommand PercentageCommand { get; }
         public ICommand ToggleHistoryCommand { get; }
-
+public ICommand SqrtCommand { get; }
+public ICommand SquareCommand { get; }
+public ICommand ReciprocalCommand { get; }
+public ICommand PowCommand { get; }
+public ICommand SinCommand { get; }
+public ICommand CosCommand { get; }
+public ICommand TanCommand { get; }
+public ICommand LnCommand { get; }
+public ICommand LogCommand { get; }
+public ICommand FactorialCommand { get; }
+private double? _secondOperandForPow = null;
 
         public CalculatorViewModel()
         {
@@ -96,10 +106,100 @@ namespace CuteCalculator.ViewModels
             DecimalCommand = new RelayCommand(_ => AppendDecimal());
             ToggleSignCommand = new RelayCommand(_ => ToggleSign());
             ToggleHistoryCommand = new RelayCommand(_ => { IsHistoryVisible = !IsHistoryVisible; });
+    // Scientific command initialization
+    SqrtCommand = new RelayCommand(_ => ExecuteScientific(new SqrtOperation()));
+    SquareCommand = new RelayCommand(_ => ExecuteScientific(new SquareOperation()));
+    ReciprocalCommand = new RelayCommand(_ => ExecuteScientific(new ReciprocalOperation()));
+    PowCommand = new RelayCommand(_ => PreparePow());
+    SinCommand = new RelayCommand(_ => ExecuteScientific(new SinOperation()));
+    CosCommand = new RelayCommand(_ => ExecuteScientific(new CosOperation()));
+    TanCommand = new RelayCommand(_ => ExecuteScientific(new TanOperation()));
+    LnCommand = new RelayCommand(_ => ExecuteScientific(new LnOperation()));
+    LogCommand = new RelayCommand(_ => ExecuteScientific(new LogOperation()));
+    FactorialCommand = new RelayCommand(_ => ExecuteScientific(new FactorialOperation()));
 
         }
 
         #region Core Methods
+
+
+private void ExecuteScientific(IScientificOperation operation)
+{
+    try
+    {
+        double currentValue = ParseDisplayText();
+        double result = operation.Calculate(currentValue);
+
+        // Update display
+        DisplayText = result.ToString(CultureInfo.InvariantCulture);
+
+        // Save history (latest 2)
+        History.Add(new OperationResult
+        {
+            Formula = FormulaText + currentValue,
+            Result = result.ToString(CultureInfo.InvariantCulture)
+        });
+        while (History.Count > 2)
+            History.RemoveAt(0);
+
+        // Prepare for next input
+        _firstOperand = result;
+        _currentOperation = OperationType.None;
+        _isNewInput = true;
+
+        OnPropertyChanged(nameof(CurrentDisplay));
+    }
+    catch
+    {
+        DisplayText = "Error";
+        _firstOperand = null;
+        _currentOperation = OperationType.None;
+        _isNewInput = true;
+    }
+}
+
+// For two-operand operation: x^y
+private void PreparePow()
+{
+    _firstOperand = ParseDisplayText();
+    _isNewInput = true;
+    FormulaText += "^";
+    OnPropertyChanged(nameof(CurrentDisplay));
+}
+
+// Call this after entering the second value for x^y
+public void ExecutePow()
+{
+    if (!_firstOperand.HasValue) return;
+
+    try
+    {
+        double secondOperand = ParseDisplayText();
+        var powOp = new PowOperation();
+        double result = powOp.Calculate(_firstOperand.Value, secondOperand);
+
+        DisplayText = result.ToString(CultureInfo.InvariantCulture);
+
+        History.Add(new OperationResult
+        {
+            Formula = $"{_firstOperand}^{secondOperand}",
+            Result = result.ToString(CultureInfo.InvariantCulture)
+        });
+        while (History.Count > 2) History.RemoveAt(0);
+
+        _firstOperand = result;
+        _currentOperation = OperationType.None;
+        _isNewInput = true;
+        OnPropertyChanged(nameof(CurrentDisplay));
+    }
+    catch
+    {
+        DisplayText = "Error";
+        _firstOperand = null;
+        _currentOperation = OperationType.None;
+        _isNewInput = true;
+    }
+}
 
         private void ApplyPercentage()
         {
