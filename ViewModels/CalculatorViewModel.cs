@@ -7,6 +7,7 @@ using System.Windows.Input;
 using CuteCalculator.Models;
 using CuteCalculator.Services;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace CuteCalculator.ViewModels
 {
@@ -86,6 +87,22 @@ public ICommand TanCommand { get; }
 public ICommand LnCommand { get; }
 public ICommand LogCommand { get; }
 public ICommand FactorialCommand { get; }
+
+private bool _isScientificVisible;
+
+public bool IsScientificVisible
+{
+    get => _isScientificVisible;
+    set
+    {
+        if (_isScientificVisible != value)
+        {
+            _isScientificVisible = value;
+            OnPropertyChanged();
+        }
+    }
+}
+
 private double? _secondOperandForPow = null;
 
         public CalculatorViewModel()
@@ -117,12 +134,35 @@ private double? _secondOperandForPow = null;
     LnCommand = new RelayCommand(_ => ExecuteScientific(new LnOperation()));
     LogCommand = new RelayCommand(_ => ExecuteScientific(new LogOperation()));
     FactorialCommand = new RelayCommand(_ => ExecuteScientific(new FactorialOperation()));
-
+    HeartAnimationCommand = new RelayCommand(_ => OnHeartAnimation());
         }
 
         #region Core Methods
 
+// this is fully for ui purpuses i struggle to fit in all my buttons while keeping ui consistent 
+//number of buttons in row consistent and number of button in colom as well so i added this 
+public ICommand HeartAnimationCommand { get; }
 
+private bool _isHeartAnimated;
+public bool IsHeartAnimated
+{
+    get => _isHeartAnimated;
+    set
+    {
+        _isHeartAnimated = value;
+        OnPropertyChanged(nameof(IsHeartAnimated));
+    }
+}
+
+private async void OnHeartAnimation()
+{
+    IsHeartAnimated = true;
+
+    // Animation lasts 1 second
+    await Task.Delay(1000);
+
+    IsHeartAnimated = false;
+}
 private void ExecuteScientific(IScientificOperation operation)
 {
     try
