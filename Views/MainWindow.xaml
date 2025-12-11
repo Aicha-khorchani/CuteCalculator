@@ -143,10 +143,30 @@
                       Style="{StaticResource CalcToggleButton}" />
 
         <!-- Heart button (right) -->
-        <Button Grid.Column="2"
-                Content="♡"
-                Command="{Binding HeartAnimationCommand}"
-                Style="{StaticResource CalcButton}"/>
+<Button Grid.Column="2"
+        Content="♡"
+        Command="{Binding HeartAnimationCommand}"
+        Style="{StaticResource CalcButton}">
+    <Button.RenderTransform>
+        <ScaleTransform x:Name="HeartScale" ScaleX="1" ScaleY="1" CenterX="0.5" CenterY="0.5"/>
+    </Button.RenderTransform>
+    <Button.Triggers>
+        <EventTrigger RoutedEvent="Button.Click">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                     From="1" To="1.5"
+                                     Duration="0:0:0.2"
+                                     AutoReverse="True"/>
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                     From="1" To="1.5"
+                                     Duration="0:0:0.2"
+                                     AutoReverse="True"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Button.Triggers>
+</Button>
     </Grid>
 
     <!-- === Keypad Grid (Row 2) : 4 columns x 5 rows === -->
@@ -194,45 +214,51 @@
         <Button Grid.Row="4" Grid.Column="0" Content="0" Command="{Binding DigitCommand}" CommandParameter="0" Style="{StaticResource CalcButton}"/>
         <Button Grid.Row="4" Grid.Column="1" Content="." Command="{Binding DecimalCommand}" Style="{StaticResource CalcButton}"/>
         <Button Grid.Row="4" Grid.Column="2" Content="=" Command="{Binding EqualsCommand}" Style="{StaticResource CalcButton}"/>
-        <Button Grid.Row="4" Grid.Column="3" Content="AC" Command="{Binding ClearCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="4" Grid.Column="3" Content="⌫" Command="{Binding DeleteLastCommand}" Style="{StaticResource CalcButton}"/>
     </Grid>
 
     <!-- === Scientific Panel (Row 3) ===
          Visible only when IsScientificVisible == true.
          RowDefinition is Auto so it collapses entirely when hidden (no white space). -->
-    <StackPanel Grid.Row="3"
-                Visibility="{Binding IsScientificVisible, Converter={StaticResource BoolToVisibilityConverter}}"
-                Margin="0,10,0,0">
+ <!-- === Scientific Panel (Row 3) === -->
+<StackPanel Grid.Row="3"
+            Visibility="{Binding IsScientificVisible, Converter={StaticResource BoolToVisibilityConverter}}"
+            Margin="0,10,0,0">
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-            <!-- Row 0: sin | cos | tan | log | ln -->
-            <Button Grid.Row="0" Grid.Column="0" Content="sin" Command="{Binding SinCommand}" Style="{StaticResource CalcButton}"/>
-            <Button Grid.Row="0" Grid.Column="1" Content="cos" Command="{Binding CosCommand}" Style="{StaticResource CalcButton}"/>
-            <Button Grid.Row="0" Grid.Column="2" Content="tan" Command="{Binding TanCommand}" Style="{StaticResource CalcButton}"/>
-            <Button Grid.Row="0" Grid.Column="3" Content="log" Command="{Binding LogCommand}" Style="{StaticResource CalcButton}"/>
-            <Button Grid.Row="0" Grid.Column="4" Content="ln"  Command="{Binding LnCommand}"  Style="{StaticResource CalcButton}"/>
+        <!-- Row 0: sin | cos | tan | log -->
+        <Button Grid.Row="0" Grid.Column="0" Content="sin" Command="{Binding SinCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="0" Grid.Column="1" Content="cos" Command="{Binding CosCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="0" Grid.Column="2" Content="tan" Command="{Binding TanCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="0" Grid.Column="3" Content="log" Command="{Binding LogCommand}" Style="{StaticResource CalcButton}"/>
 
-            <!-- Row 1: √x | x² | x³ | 1/x | π -->
-            <Button Grid.Row="1" Grid.Column="0" Content="√x" Command="{Binding SqrtCommand}" Style="{StaticResource CalcButton}"/>
-            <Button Grid.Row="1" Grid.Column="1" Content="x²" Command="{Binding SquareCommand}" Style="{StaticResource CalcButton}"/>
-            <Button Grid.Row="1" Grid.Column="2" Content="x³" Command="{Binding PowCommand}" CommandParameter="3" Style="{StaticResource CalcButton}"/>
-            <Button Grid.Row="1" Grid.Column="3" Content="1/x" Command="{Binding ReciprocalCommand}" Style="{StaticResource CalcButton}"/>
-            <Button Grid.Row="1" Grid.Column="4" Content="π" Command="{Binding InsertPiCommand}" Style="{StaticResource CalcButton}"/>
-        </Grid>
-    </StackPanel>
+        <!-- Row 1: ln | √x | x² | x³ -->
+        <Button Grid.Row="1" Grid.Column="0" Content="ln" Command="{Binding LnCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="1" Grid.Column="1" Content="√x" Command="{Binding SqrtCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="1" Grid.Column="2" Content="x²" Command="{Binding SquareCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="1" Grid.Column="3" Content="x³" Command="{Binding PowCommand}" CommandParameter="3" Style="{StaticResource CalcButton}"/>
+
+        <!-- Row 2: 1/x | π | % (scientific) | e^x -->
+        <Button Grid.Row="2" Grid.Column="0" Content="1/x" Command="{Binding ReciprocalCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="1" Content="π" Command="{Binding InsertPiCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="2" Content="()" Command="{Binding PercentageCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="3" Content="eˣ" Command="{Binding ExpCommand}" Style="{StaticResource CalcButton}"/>
+    </Grid>
+</StackPanel>
+
 </Grid>
 
 </Window>

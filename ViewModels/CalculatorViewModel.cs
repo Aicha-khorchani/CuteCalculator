@@ -8,6 +8,7 @@ using CuteCalculator.Models;
 using CuteCalculator.Services;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using CuteCalculator.Services.ScientificOperations;
 
 namespace CuteCalculator.ViewModels
 {
@@ -77,6 +78,8 @@ namespace CuteCalculator.ViewModels
         public ICommand ToggleSignCommand { get; }
         public ICommand PercentageCommand { get; }
         public ICommand ToggleHistoryCommand { get; }
+        public ICommand ExpCommand { get; }
+        public ICommand DeleteLastCommand { get; }
 public ICommand SqrtCommand { get; }
 public ICommand SquareCommand { get; }
 public ICommand ReciprocalCommand { get; }
@@ -87,6 +90,9 @@ public ICommand TanCommand { get; }
 public ICommand LnCommand { get; }
 public ICommand LogCommand { get; }
 public ICommand FactorialCommand { get; }
+// this is fully for ui purpuses i struggle to fit in all my buttons while keeping ui consistent 
+//number of buttons in row consistent and number of button in colom as well so i added this 
+public ICommand HeartAnimationCommand { get; }
 
 private bool _isScientificVisible;
 
@@ -123,25 +129,59 @@ private double? _secondOperandForPow = null;
             DecimalCommand = new RelayCommand(_ => AppendDecimal());
             ToggleSignCommand = new RelayCommand(_ => ToggleSign());
             ToggleHistoryCommand = new RelayCommand(_ => { IsHistoryVisible = !IsHistoryVisible; });
-    // Scientific command initialization
-    SqrtCommand = new RelayCommand(_ => ExecuteScientific(new SqrtOperation()));
-    SquareCommand = new RelayCommand(_ => ExecuteScientific(new SquareOperation()));
-    ReciprocalCommand = new RelayCommand(_ => ExecuteScientific(new ReciprocalOperation()));
-    PowCommand = new RelayCommand(_ => PreparePow());
-    SinCommand = new RelayCommand(_ => ExecuteScientific(new SinOperation()));
-    CosCommand = new RelayCommand(_ => ExecuteScientific(new CosOperation()));
-    TanCommand = new RelayCommand(_ => ExecuteScientific(new TanOperation()));
-    LnCommand = new RelayCommand(_ => ExecuteScientific(new LnOperation()));
-    LogCommand = new RelayCommand(_ => ExecuteScientific(new LogOperation()));
-    FactorialCommand = new RelayCommand(_ => ExecuteScientific(new FactorialOperation()));
-    HeartAnimationCommand = new RelayCommand(_ => OnHeartAnimation());
+          // Scientific command initialization
+            SqrtCommand = new RelayCommand(_ => ExecuteScientific(new SqrtOperation()));
+            SquareCommand = new RelayCommand(_ => ExecuteScientific(new SquareOperation()));
+            ReciprocalCommand = new RelayCommand(_ => ExecuteScientific(new ReciprocalOperation()));
+            PowCommand = new RelayCommand(_ => PreparePow());
+            SinCommand = new RelayCommand(_ => ExecuteScientific(new SinOperation()));
+            CosCommand = new RelayCommand(_ => ExecuteScientific(new CosOperation()));
+            TanCommand = new RelayCommand(_ => ExecuteScientific(new TanOperation()));
+            LnCommand = new RelayCommand(_ => ExecuteScientific(new LnOperation()));
+            LogCommand = new RelayCommand(_ => ExecuteScientific(new LogOperation()));
+            FactorialCommand = new RelayCommand(_ => ExecuteScientific(new FactorialOperation()));
+            HeartAnimationCommand = new RelayCommand(_ => OnHeartAnimation());
+            ExpCommand = new RelayCommand(_ => ApplyExpOperation());
+            DeleteLastCommand = new RelayCommand(_ => DeleteLastCharacter());
+
         }
 
         #region Core Methods
 
-// this is fully for ui purpuses i struggle to fit in all my buttons while keeping ui consistent 
-//number of buttons in row consistent and number of button in colom as well so i added this 
-public ICommand HeartAnimationCommand { get; }
+
+private void DeleteLastCharacter()
+{
+    if (!string.IsNullOrEmpty(DisplayText))
+    {
+        DisplayText = DisplayText.Substring(0, DisplayText.Length - 1);
+    }
+}
+private readonly ExpOperation _expOperation = new ExpOperation();
+
+private void AddToHistory(string formula, string result = "")
+{
+    History.Add(new OperationResult
+    {
+        Formula = formula,
+        Result = string.IsNullOrEmpty(result) ? DisplayText : result
+    });
+
+    // keep last 2 only
+    while (History.Count > 2)
+        History.RemoveAt(0);
+
+    OnPropertyChanged(nameof(CurrentDisplay));
+}
+
+private void ApplyExpOperation()
+{
+    if (double.TryParse(DisplayText, out double value))
+    {
+        double result = _expOperation.Execute(value);
+        DisplayText = result.ToString();
+        AddToHistory($"e^{value} = {result}");
+    }
+}
 
 private bool _isHeartAnimated;
 public bool IsHeartAnimated
@@ -174,13 +214,7 @@ private void ExecuteScientific(IScientificOperation operation)
         DisplayText = result.ToString(CultureInfo.InvariantCulture);
 
         // Save history (latest 2)
-        History.Add(new OperationResult
-        {
-            Formula = FormulaText + currentValue,
-            Result = result.ToString(CultureInfo.InvariantCulture)
-        });
-        while (History.Count > 2)
-            History.RemoveAt(0);
+        AddToHistory(FormulaText + currentValue, result.ToString(CultureInfo.InvariantCulture));
 
         // Prepare for next input
         _firstOperand = result;
@@ -220,12 +254,8 @@ public void ExecutePow()
 
         DisplayText = result.ToString(CultureInfo.InvariantCulture);
 
-        History.Add(new OperationResult
-        {
-            Formula = $"{_firstOperand}^{secondOperand}",
-            Result = result.ToString(CultureInfo.InvariantCulture)
-        });
-        while (History.Count > 2) History.RemoveAt(0);
+        AddToHistory($"{_firstOperand}^{secondOperand}", result.ToString(CultureInfo.InvariantCulture));
+
 
         _firstOperand = result;
         _currentOperation = OperationType.None;
@@ -358,14 +388,8 @@ public void ExecutePow()
                 double result = opHandler.Compute(_firstOperand.Value, secondOperand);
 
                 // Save history
-                History.Add(new OperationResult
-                {
-                    Formula = FormulaText + secondOperand,
-                    Result = result.ToString(CultureInfo.InvariantCulture)
-                });
-                // Limit to 2 operations only no need to take the whole history 
-                while (History.Count > 2)
-                History.RemoveAt(0);
+                AddToHistory(FormulaText + secondOperand, result.ToString(CultureInfo.InvariantCulture));
+
                 DisplayText = result.ToString(CultureInfo.InvariantCulture);
                 _firstOperand = result;
                 _currentOperation = OperationType.None;
