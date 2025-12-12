@@ -9,6 +9,8 @@ using CuteCalculator.Services;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CuteCalculator.Services.ScientificOperations;
+using System.Linq;
+using System.Data;
 
 namespace CuteCalculator.ViewModels
 {
@@ -68,18 +70,20 @@ namespace CuteCalculator.ViewModels
         private OperationType _currentOperation = OperationType.None;
         private bool _isNewInput = true; // overwrite vs append
 
-        // Commands
-        public ICommand DigitCommand { get; }
-        public ICommand OperationCommand { get; }
-        public ICommand EqualsCommand { get; }
-        public ICommand ClearCommand { get; }
-        public ICommand BackspaceCommand { get; }
-        public ICommand DecimalCommand { get; }
-        public ICommand ToggleSignCommand { get; }
-        public ICommand PercentageCommand { get; }
-        public ICommand ToggleHistoryCommand { get; }
-        public ICommand ExpCommand { get; }
-        public ICommand DeleteLastCommand { get; }
+// Commands
+public ICommand DigitCommand { get; }
+public ICommand OperationCommand { get; }
+public ICommand EqualsCommand { get; }
+public ICommand ClearCommand { get; }
+public ICommand BackspaceCommand { get; }
+public ICommand DecimalCommand { get; }
+public ICommand ToggleSignCommand { get; }
+public ICommand PercentageCommand { get; }
+public ICommand ToggleHistoryCommand { get; }
+public ICommand ExpCommand { get; }
+public ICommand DeleteLastCommand { get; }
+public ICommand ParenthesisCommand { get; }
+
 public ICommand SqrtCommand { get; }
 public ICommand SquareCommand { get; }
 public ICommand ReciprocalCommand { get; }
@@ -93,6 +97,7 @@ public ICommand FactorialCommand { get; }
 // this is fully for ui purpuses i struggle to fit in all my buttons while keeping ui consistent 
 //number of buttons in row consistent and number of button in colom as well so i added this 
 public ICommand HeartAnimationCommand { get; }
+
 
 private bool _isScientificVisible;
 
@@ -143,11 +148,59 @@ private double? _secondOperandForPow = null;
             HeartAnimationCommand = new RelayCommand(_ => OnHeartAnimation());
             ExpCommand = new RelayCommand(_ => ApplyExpOperation());
             DeleteLastCommand = new RelayCommand(_ => DeleteLastCharacter());
+            ParenthesisCommand = new RelayCommand(_ => AppendParenthesis());
+
 
         }
 
         #region Core Methods
 
+
+private int _openParenthesesCount = 0;
+
+private void AppendParenthesis()
+{
+    if (_isNewInput)
+    {
+        DisplayText = "(";
+        _isNewInput = false;
+        _openParenthesesCount = 1;
+    }
+    else
+    {
+        if (_openParenthesesCount == 0 || DisplayText.EndsWith("(") || IsLastCharOperator())
+        {
+            // Open a new parenthesis
+            DisplayText += "(";
+            _openParenthesesCount++;
+        }
+        else
+        {
+            // Close a parenthesis if possible
+            if (_openParenthesesCount > 0)
+            {
+                DisplayText += ")";
+                _openParenthesesCount--;
+            }
+            else
+            {
+                // fallback: open new parenthesis
+                DisplayText += "(";
+                _openParenthesesCount++;
+            }
+        }
+    }
+
+    FormulaText += DisplayText.Last(); // keep formula consistent
+    OnPropertyChanged(nameof(CurrentDisplay));
+}
+
+private bool IsLastCharOperator()
+{
+    if (string.IsNullOrEmpty(DisplayText)) return false;
+    char last = DisplayText[^1];
+    return "+-×÷*/".Contains(last);
+}
 
 private void DeleteLastCharacter()
 {
@@ -377,46 +430,42 @@ public void ExecutePow()
 
     OnPropertyChanged(nameof(CurrentDisplay));
 }
-        public void ExecuteOperation()
-        {
-            try
-            {
-                if (_currentOperation == OperationType.None || !_firstOperand.HasValue) return;
+public void ExecuteOperation()
+{
+    try
+    {
+        string expr = FormulaText.Replace("×", "*").Replace("÷", "/");
 
-                double secondOperand = ParseDisplayText();
-                var opHandler = _operations[_currentOperation];
-                double result = opHandler.Compute(_firstOperand.Value, secondOperand);
+        // Use DataTable.Compute to evaluate the expression
+        var resultObj = new DataTable().Compute(expr, null);
+        double result = Convert.ToDouble(resultObj);
 
-                // Save history
-                AddToHistory(FormulaText + secondOperand, result.ToString(CultureInfo.InvariantCulture));
+        // Save history
+        AddToHistory(FormulaText, result.ToString(CultureInfo.InvariantCulture));
 
-                DisplayText = result.ToString(CultureInfo.InvariantCulture);
-                _firstOperand = result;
-                _currentOperation = OperationType.None;
-                _isNewInput = true;
+        // Update display
+        DisplayText = result.ToString(CultureInfo.InvariantCulture);
 
-                OnPropertyChanged(nameof(CurrentDisplay));
-            }
-            catch (DivideByZeroException)
-            {
-                DisplayText = "Error";
-                _firstOperand = null;
-                _currentOperation = OperationType.None;
-                _isNewInput = true;
+        // Reset state for next input
+        FormulaText = DisplayText;
+        _firstOperand = null;
+        _currentOperation = OperationType.None;
+        _isNewInput = true;
+        _openParenthesesCount = 0;
 
-                OnPropertyChanged(nameof(CurrentDisplay));
-            }
-            catch (Exception)
-            {
-                DisplayText = "Error";
-                _firstOperand = null;
-                _currentOperation = OperationType.None;
-                _isNewInput = true;
-
-                OnPropertyChanged(nameof(CurrentDisplay));
-            }
-        }
-
+        OnPropertyChanged(nameof(CurrentDisplay));
+    }
+    catch
+    {
+        DisplayText = "Error";
+        FormulaText = "";
+        _firstOperand = null;
+        _currentOperation = OperationType.None;
+        _isNewInput = true;
+        _openParenthesesCount = 0;
+        OnPropertyChanged(nameof(CurrentDisplay));
+    }
+}
         public void Clear()
         {
             DisplayText = "0";

@@ -254,7 +254,7 @@
         <!-- Row 2: 1/x | π | % (scientific) | e^x -->
         <Button Grid.Row="2" Grid.Column="0" Content="1/x" Command="{Binding ReciprocalCommand}" Style="{StaticResource CalcButton}"/>
         <Button Grid.Row="2" Grid.Column="1" Content="π" Command="{Binding InsertPiCommand}" Style="{StaticResource CalcButton}"/>
-        <Button Grid.Row="2" Grid.Column="2" Content="()" Command="{Binding PercentageCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="2" Content="()" Command="{Binding ParenthesisCommand}" Style="{StaticResource CalcButton}"/>
         <Button Grid.Row="2" Grid.Column="3" Content="eˣ" Command="{Binding ExpCommand}" Style="{StaticResource CalcButton}"/>
     </Grid>
 </StackPanel>
