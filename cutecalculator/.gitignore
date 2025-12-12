@@ -1,0 +1,87 @@
+# ===============================
+# .NET / Visual Studio common files
+# ===============================
+
+# Build folders
+bin/
+obj/
+[Rr]elease/
+[Dd]ebug/
+x64/
+x86/
+
+# Visual Studio files i dont use vs i use vscode but maybe someone will fork it so..
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vsp
+
+# Visual Studio Code
+.vscode/
+
+# Rider IDE
+.idea/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+
+# Rider caches
+.idea/
+*.sln.iml
+
+# Resharper
+*.DotSettings.user
+
+# Others
+*.log
+*.vs/
+*.DS_Store
+*.tmp
+
+# ===============================
+# OS Generated
+# ===============================
+Thumbs.db
+desktop.ini
+
+# ===============================
+# Files to ignore for .NET projects
+# ===============================
+
+# Auto-generated files
+*.Designer.cs
+*.generated.cs
+
+# Backup files
+*.bak
+*.backup
+
+# Coverage / test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# JetBrains Rider
+.idea/
+
+# Visual Studio temporary files
+*.cache
+*.ilk
+*.pdb
+*.idb
+
+# Entity Framework
+*.dbmdl
+
+# Dotnet Watch
+.dotnetwatch/
+
+# ===============================
+# Ignore logs tbh i still dont have any curently but  plan to add so .. 
+# ===============================
+*.log

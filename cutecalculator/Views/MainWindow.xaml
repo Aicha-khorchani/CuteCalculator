@@ -1,0 +1,264 @@
+<Window x:Class="CuteCalculator.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:CuteCalculator.Converters"
+        Title="Cute Calculator"
+        Width="360"
+        WindowStartupLocation="CenterScreen"
+        Background="#FFF7F0FA"
+        SizeToContent="Height"
+        ResizeMode="CanMinimize"
+        Icon="pack://application:,,,/Assets/cat.ico">
+
+<Window.Resources>
+    <Color x:Key="PinkMain">#FFF5C8E8</Color>
+    <Color x:Key="ShadowColor">#33000000</Color>
+
+    <SolidColorBrush x:Key="ButtonBrush" Color="{StaticResource PinkMain}" />
+
+    <Style x:Key="CalcButtonBase">
+        <Setter Property="Control.FontSize" Value="20"/>
+        <Setter Property="Control.FontWeight" Value="SemiBold"/>
+        <Setter Property="Control.Height" Value="55"/>
+        <Setter Property="Control.Margin" Value="1"/> 
+        <Setter Property="Control.Padding" Value="2"/>
+        <Setter Property="Control.Background" Value="{StaticResource ButtonBrush}"/>
+        <Setter Property="Control.Foreground" Value="#7A306C"/>
+        <Setter Property="Control.BorderThickness" Value="0"/>
+        <Setter Property="Control.Cursor" Value="Hand"/>
+        <Setter Property="Control.Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="{StaticResource ShadowColor}" BlurRadius="4" ShadowDepth="1"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="CalcButton" TargetType="Button" BasedOn="{StaticResource CalcButtonBase}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border CornerRadius="20" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="CalcToggleButton" TargetType="ToggleButton" BasedOn="{StaticResource CalcButtonBase}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border CornerRadius="20" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Background" Value="#FFDBA3CE"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+</Window.Resources>
+
+<Grid Margin="10">
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>  <!-- Row 0: Display (already contains the Border + history ListBox) -->
+        <RowDefinition Height="Auto"/>  <!-- Row 1: Mode row (History / Scientific / Heart) -->
+        <RowDefinition Height="Auto"/>  <!-- Row 2: Keypad -->
+        <RowDefinition Height="Auto"/>  <!-- Row 3: Scientific panel (collapsible) -->
+    </Grid.RowDefinitions>
+
+    <Border Grid.Row="0"
+            CornerRadius="20"
+            Background="White"
+            Padding="15"
+            Margin="0 0 0 8">
+        <Border.Effect>
+            <DropShadowEffect Color="#33000000" BlurRadius="8" ShadowDepth="2"/>
+        </Border.Effect>
+
+        <Grid>
+            <!-- Normal calculator display -->
+            <StackPanel Visibility="{Binding IsHistoryVisible,
+                                  Converter={StaticResource BoolInverseToVisibilityConverter}}">
+                <TextBlock Text="{Binding FormulaText}"
+                           FontSize="16"
+                           HorizontalAlignment="Right"
+                           Foreground="#7A306C"/>
+
+                <TextBlock Text="{Binding DisplayText}"
+                           FontSize="32"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Right"
+                           Foreground="#7A306C"/>
+            </StackPanel>
+
+            <!-- History List (overlayed in place of display when IsHistoryVisible is true) -->
+            <ListBox ItemsSource="{Binding History}"
+                     Visibility="{Binding IsHistoryVisible,
+                              Converter={StaticResource BoolToVisibilityConverter}}"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     HorizontalContentAlignment="Right">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Formula}"
+                                       FontSize="14"
+                                       Foreground="#7A306C"
+                                       HorizontalAlignment="Right"/>
+                            <TextBlock Text="{Binding Result}"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Foreground="#7A306C"
+                                       HorizontalAlignment="Right"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Border>
+
+    <!-- === Mode Row (Row 1): history toggle, scientific toggle, heart button === -->
+    <Grid Grid.Row="1" Margin="0 0 0 8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- History toggle (left) -->
+        <ToggleButton Grid.Column="0"
+                      Content="🕒"
+                      IsChecked="{Binding IsHistoryVisible}"
+                      Style="{StaticResource CalcToggleButton}" />
+
+        <!-- Scientific toggle (center) -->
+        <ToggleButton Grid.Column="1"
+                      Content="ƒx sc"
+                      IsChecked="{Binding IsScientificVisible}"
+                      Style="{StaticResource CalcToggleButton}" />
+
+        <!-- Heart button (right) -->
+<Button Grid.Column="2"
+        Content="♡"
+        Command="{Binding HeartAnimationCommand}"
+        Style="{StaticResource CalcButton}">
+    <Button.RenderTransform>
+        <ScaleTransform x:Name="HeartScale" ScaleX="1" ScaleY="1" CenterX="0.5" CenterY="0.5"/>
+    </Button.RenderTransform>
+    <Button.Triggers>
+        <EventTrigger RoutedEvent="Button.Click">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                     From="1" To="1.5"
+                                     Duration="0:0:0.2"
+                                     AutoReverse="True"/>
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                     From="1" To="1.5"
+                                     Duration="0:0:0.2"
+                                     AutoReverse="True"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Button.Triggers>
+</Button>
+    </Grid>
+
+    <!-- === Keypad Grid (Row 2) : 4 columns x 5 rows === -->
+    <Grid Grid.Row="2">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- row 0 -->
+            <RowDefinition Height="Auto"/> <!-- row 1 -->
+            <RowDefinition Height="Auto"/> <!-- row 2 -->
+            <RowDefinition Height="Auto"/> <!-- row 3 -->
+            <RowDefinition Height="Auto"/> <!-- row 4 -->
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Row 0: C | % | ± | ÷ -->
+        <Button Grid.Row="0" Grid.Column="0" Content="C" Command="{Binding ClearCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="0" Grid.Column="1" Content="%" Command="{Binding PercentageCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="0" Grid.Column="2" Content="±" Command="{Binding ToggleSignCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="0" Grid.Column="3" Content="÷" Command="{Binding OperationCommand}" CommandParameter="/" Style="{StaticResource CalcButton}"/>
+
+        <!-- Row 1: 7 | 8 | 9 | × -->
+        <Button Grid.Row="1" Grid.Column="0" Content="7" Command="{Binding DigitCommand}" CommandParameter="7" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="1" Grid.Column="1" Content="8" Command="{Binding DigitCommand}" CommandParameter="8" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="1" Grid.Column="2" Content="9" Command="{Binding DigitCommand}" CommandParameter="9" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="1" Grid.Column="3" Content="×" Command="{Binding OperationCommand}" CommandParameter="*" Style="{StaticResource CalcButton}"/>
+
+        <!-- Row 2: 4 | 5 | 6 | - -->
+        <Button Grid.Row="2" Grid.Column="0" Content="4" Command="{Binding DigitCommand}" CommandParameter="4" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="1" Content="5" Command="{Binding DigitCommand}" CommandParameter="5" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="2" Content="6" Command="{Binding DigitCommand}" CommandParameter="6" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="3" Content="-" Command="{Binding OperationCommand}" CommandParameter="-" Style="{StaticResource CalcButton}"/>
+
+        <!-- Row 3: 1 | 2 | 3 | + -->
+        <Button Grid.Row="3" Grid.Column="0" Content="1" Command="{Binding DigitCommand}" CommandParameter="1" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="3" Grid.Column="1" Content="2" Command="{Binding DigitCommand}" CommandParameter="2" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="3" Grid.Column="2" Content="3" Command="{Binding DigitCommand}" CommandParameter="3" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="3" Grid.Column="3" Content="+" Command="{Binding OperationCommand}" CommandParameter="+" Style="{StaticResource CalcButton}"/>
+
+        <!-- Row 4: 0 | . | = | AC -->
+        <Button Grid.Row="4" Grid.Column="0" Content="0" Command="{Binding DigitCommand}" CommandParameter="0" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="4" Grid.Column="1" Content="." Command="{Binding DecimalCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="4" Grid.Column="2" Content="=" Command="{Binding EqualsCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="4" Grid.Column="3" Content="⌫" Command="{Binding DeleteLastCommand}" Style="{StaticResource CalcButton}"/>
+    </Grid>
+
+    <!-- === Scientific Panel (Row 3) ===
+         Visible only when IsScientificVisible == true.
+         RowDefinition is Auto so it collapses entirely when hidden (no white space). -->
+ <!-- === Scientific Panel (Row 3) === -->
+<StackPanel Grid.Row="3"
+            Visibility="{Binding IsScientificVisible, Converter={StaticResource BoolToVisibilityConverter}}"
+            Margin="0,10,0,0">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: sin | cos | tan | log -->
+        <Button Grid.Row="0" Grid.Column="0" Content="sin" Command="{Binding SinCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="0" Grid.Column="1" Content="cos" Command="{Binding CosCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="0" Grid.Column="2" Content="tan" Command="{Binding TanCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="0" Grid.Column="3" Content="log" Command="{Binding LogCommand}" Style="{StaticResource CalcButton}"/>
+
+        <!-- Row 1: ln | √x | x² | x³ -->
+        <Button Grid.Row="1" Grid.Column="0" Content="ln" Command="{Binding LnCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="1" Grid.Column="1" Content="√x" Command="{Binding SqrtCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="1" Grid.Column="2" Content="x²" Command="{Binding SquareCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="1" Grid.Column="3" Content="x³" Command="{Binding PowCommand}" CommandParameter="3" Style="{StaticResource CalcButton}"/>
+
+        <!-- Row 2: 1/x | π | % (scientific) | e^x -->
+        <Button Grid.Row="2" Grid.Column="0" Content="1/x" Command="{Binding ReciprocalCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="1" Content="π" Command="{Binding InsertPiCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="2" Content="()" Command="{Binding ParenthesisCommand}" Style="{StaticResource CalcButton}"/>
+        <Button Grid.Row="2" Grid.Column="3" Content="eˣ" Command="{Binding ExpCommand}" Style="{StaticResource CalcButton}"/>
+    </Grid>
+</StackPanel>
+
+</Grid>
+
+</Window>
