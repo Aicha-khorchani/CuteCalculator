@@ -1,7 +1,7 @@
 # CuteCalculator done by aicha khorchani
 
 CuteCalculator is a WPF desktop calculator application built with **C# / .NET** following the **MVVM architecture**.  
-It supports standard arithmetic operations as well as scientific functions and is partionly covered by automated unit tests.
+It supports standard arithmetic operations as well as scientific functions and is partionly covered by some automated unit tests.
 ----------------------------------------------------
 ##  Features
 
