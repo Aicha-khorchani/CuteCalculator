@@ -1,7 +1,19 @@
 # CuteCalculator done by aicha khorchani
 
 CuteCalculator is a WPF desktop calculator application built with **C# / .NET** following the **MVVM architecture**.  
-It supports standard arithmetic operations as well as scientific functions and is partionly covered by some automated unit tests.
+It supports standard arithmetic operations as well as scientific functions and is partionly covered by automated unit tests.
+
+## Screenshots
+
+### Main Window
+![Main Window](screenshots/main-window.png)
+
+### Scientific Operations
+![Scientific Mode](screenshots/scientific-mode.png)
+
+### Memory Features
+![Memory](screenshots/memory-feature.png)
+
 ----------------------------------------------------
 ##  Features
 
@@ -22,7 +34,6 @@ It supports standard arithmetic operations as well as scientific functions and i
 
 ##  Project Structure
 cutecalculator/
-│
 ├── cutecalculator/ # Main WPF application
 │ ├── Views/ # XAML views (UI)
 │ ├── ViewModels/ # ViewModels (logic & state)
@@ -31,11 +42,10 @@ cutecalculator/
 │ ├── Converters/ # WPF value converters
 │ ├── Assets/ # Icons and resources
 │ └── App.xaml # Application entry point
-│
 ├── CuteCalculator.Tests/ # Unit tests (xUnit)
 │ ├── Memory/ # State & memory behavior tests
-│ └── Scientific/ # Scientific operation tests
-│ └── basic/ # basic operation tests
+│ ├── Scientific/ # Scientific operation tests
+│ └── basic/ # Basic operation tests
 └── cutecalculator.sln # Solution file
 
 -----------------------------------------------------------
