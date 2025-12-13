@@ -6,13 +6,13 @@ It supports standard arithmetic operations as well as scientific functions and i
 ## Screenshots
 
 ### Main Window
-![Main Window](screenshots/main-window.png)
+<img src="screenshots/main-window.png" width="400">
 
 ### Scientific Operations
-![Scientific Mode](screenshots/scientific-mode.png)
+<img src="screenshots/scientific-mode.png" width="400">
 
 ### Memory Features
-![Memory](screenshots/memory-feature.png)
+<img src="screenshots/memory-feature.png" width="400">
 
 ----------------------------------------------------
 ##  Features
@@ -32,21 +32,27 @@ It supports standard arithmetic operations as well as scientific functions and i
 
 ----------------------------------------------------------------------------
 
-##  Project Structure
+## Project Structure
+
+<details>
+<summary>Click to expand project folder structure</summary>
+
+```text
 cutecalculator/
-├── cutecalculator/ # Main WPF application
-│ ├── Views/ # XAML views (UI)
-│ ├── ViewModels/ # ViewModels (logic & state)
-│ ├── Models/ # Domain models & enums
-│ ├── Services/ # Operations & calculation logic
-│ ├── Converters/ # WPF value converters
-│ ├── Assets/ # Icons and resources
-│ └── App.xaml # Application entry point
-├── CuteCalculator.Tests/ # Unit tests (xUnit)
-│ ├── Memory/ # State & memory behavior tests
-│ ├── Scientific/ # Scientific operation tests
-│ └── basic/ # Basic operation tests
-└── cutecalculator.sln # Solution file
+├── cutecalculator/         # Main WPF application
+│   ├── Views/              # XAML views (UI)
+│   ├── ViewModels/         # ViewModels (logic & state)
+│   ├── Models/             # Domain models & enums
+│   ├── Services/           # Operations & calculation logic
+│   ├── Converters/         # WPF value converters
+│   ├── Assets/             # Icons and resources
+│   └── App.xaml            # Application entry point
+├── CuteCalculator.Tests/    # Unit tests (xUnit)
+│   ├── Memory/             # State & memory behavior tests
+│   ├── Scientific/         # Scientific operation tests
+│   └── Basic/              # Basic operation tests
+└── cutecalculator.sln       # Solution file
+</details>
 
 -----------------------------------------------------------
 ##  Architecture Overview (MVVM)
