@@ -257,9 +257,10 @@ internal void ExecuteScientific(IScientificOperation operation)
         if (operation is LnOperation && currentValue < 0)
         {
             DisplayText = "Error";
-            _firstOperand = null;
-            _isNewInput = true;
             FormulaText = "";
+            _firstOperand = null;
+            _currentOperation = OperationType.None;
+            _isNewInput = true;
             OnPropertyChanged(nameof(CurrentDisplay));
             return;
         }
@@ -269,21 +270,21 @@ internal void ExecuteScientific(IScientificOperation operation)
         if (double.IsNaN(result) || double.IsInfinity(result))
         {
             DisplayText = "Error";
+            FormulaText = "";
             _firstOperand = null;
         }
         else
         {
             DisplayText = result.ToString(CultureInfo.InvariantCulture);
             _firstOperand = result;
-            _isNewInput = true;
+
+            FormulaText = "";      
+            _isNewInput = true;    // next digit replaces result
         }
 
         AddToHistory($"{operation.GetType().Name}({currentValue})", DisplayText);
 
-        FormulaText = DisplayText; // start next input fresh
         _currentOperation = OperationType.None;
-        _isNewInput = true;
-
         OnPropertyChanged(nameof(CurrentDisplay));
     }
     catch
